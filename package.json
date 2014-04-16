@@ -1,0 +1,9 @@
+{
+  "name": "mongodom",
+  "version": "0.0.0",
+  "author": "Terry Ford",
+  "dependencies": {
+    "mongodb": "~1.4.0",
+    "async": "~0.7.0"
+  }
+}
