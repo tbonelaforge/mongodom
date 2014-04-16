@@ -1,6 +1,6 @@
 var _ = require('underscore');
 var MongoClient = require('mongodb').MongoClient;
-var classify = require('./classify');
+var classify = require('classify');
 
 var db = null;
 

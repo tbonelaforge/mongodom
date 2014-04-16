@@ -1,5 +1,5 @@
 var _ = require('underscore');
-var classify = require('./classify');
+var classify = require('classify');
 var Axis = require('./axis');
 var CDocument = require('./cdocument');
 

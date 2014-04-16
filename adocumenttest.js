@@ -1,8 +1,5 @@
 var ADocument = require('./adocument');
 
-console.log("Just loaded ADocument:\n", ADocument);
-console.log("ADocument's prototype object is:\n", ADocument.prototype);
-console.log("About to construct a new instance of ADocument, passing options:\n", { criteria : { id : 1 } } );
 var aDocument = new ADocument({
   criteria : {
     id : 1
@@ -20,8 +17,7 @@ aDocument.traverse(
       console.log("There was an error traversing from a1:\n", err);
       process.exit(1);
     }
-    console.log("The result of the traversal is:\n", data);
-//    process.exit(0);
+    console.log("The result of traversion from a/1 to cs is:\n", data);
     
     console.log("about to traverse from a/1 to cs/1");
     aDocument1 = new ADocument({
