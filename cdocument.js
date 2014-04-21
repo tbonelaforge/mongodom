@@ -2,6 +2,10 @@ var _ = require('underscore');
 var classify = require('classify');
 var Document = require('./document');
 
+var referencedModels = {
+  
+};
+
 var CDocument = classify({
   name : 'CDocument',
   inherits : [Document],
@@ -9,7 +13,11 @@ var CDocument = classify({
   classMethods : {
     getCollectionName : function() {
       return 'cs';
+    },
+    referencedModels : {
+
     }
+
   },
   instanceMethods : {
     
