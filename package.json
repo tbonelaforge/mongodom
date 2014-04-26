@@ -6,5 +6,9 @@
     "mongodb": "~1.4.0",
     "async": "~0.7.0",
     "classify" : "git://github.com/cl-tford/classify.git"
+  },
+  "devDependencies" : {
+    "mocha" : "~1.18.2",
+    "chai"  : "~1.9.1"
   }
 }

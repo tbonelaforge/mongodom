@@ -17,11 +17,14 @@ var Document = classify({
   },
   classMethods    : {
     getReferencedModel : function(key) {
+      var refererent = null;
+
       if (!this.referencedModels || !this.referencedModels[key]) {
         return null;
       }
-      if (typeof this.referencedModels[key] !== 'function') {
-        this.referencedModels[key] = require('./' + key);
+      referent = this.referencedModels[key];
+      if (typeof referent !== 'function') {
+        this.referencedModels[key] = require('./' + referent);
       }
       return this.referencedModels[key];
     }
@@ -82,8 +85,8 @@ var Document = classify({
 
     _endTraversal : function(fields, callback) {
       var self = this;
-      var selectObject = self._makeSelectObject(fields);
-      
+      var selectObject = self.makeSelectObject(fields);
+
       return self.getFields(
         {
           fields : selectObject,
@@ -93,52 +96,58 @@ var Document = classify({
           if (err) {
             return callback(err);
           }
-          self._traverseAllFields(fields, callback);
+          try {
+            self._traverseAllFields({fields : fields}, callback);
+          } catch(e) {
+            callback(e);
+          }
         }
       );      
     },
 
-    _traverseAllFields : function(fields, callback) {
+    _traverseAllFields : function(options, callback) {
       var self = this;
-      var document = self;
+      var fields = options.fields;
+      var document = null;
       var referencedDocument = null;
-      var iterator = new ObjectIterator(fields);
+      var iterator = null;
       var nextIterator = null;
-      var stack = [document, iterator];
+      var selectObject = null;
       var pair = null;
 
-      (function recurse() {
-        var referencedDocument = null;
-        var nextIterator = null;
-        var selectObject = null;
+      if (!options.stack) {
+        options.stack = [self, new ObjectIterator(fields)];
+      }
+      if (!options.stack.length) {
+        return callback(null, self);
+      }
+      iterator = options.stack[options.stack.length - 1];
+      document = options.stack[options.stack.length - 2];
+      pair = iterator.getNextPair();
+      if (!pair) {
+        options.stack.pop(); // Used-up iterator.
+        options.stack.pop(); // processed document.
+        return self._traverseAllFields(options, callback);
+      }
+      if (typeof pair.value !== 'object') { // This field needs no populating.
+        return self._traverseAllFields(options, callback);
+      }
+
+      // Assume the fields are valid for this document.
+      referencedDocument = document.getReference(pair.key);
+      if (!referencedDocument) {
+        return self._traverseAllFields(options, callback);
         
-        if (!stack.length) {
-          return callback(null, self);
-        }
-        iterator = stack.pop();
-        document = stack.pop();
-        pair = iterator.getNextPair();
-        if (!pair) {
-          stack.pop(); // Used-up iterator
-          stack.pop(); // processed document
-          return recurse();
-        }
-        if (typeof pair.value !== 'object') {
-          return recurse();
-        }
-        referencedDocument = document.getReference(pair.key);
-        if (!referencedDocument) {
-          return recurse();
-        }
-        fields = pair.value;
-        nextIterator = new ObjectIterator(fields);
-        selectObject = referencedDocument.makeSelectObject(fields);
-        referencedDocument.retrieve(selectObject, function(err, data) {
-          document.set(pair.key, data);
-          stack.push(referencedDocument);
-          stack.push(nextIterator);
-        });
-      }());      
+      }
+      options.fields = pair.value;
+      nextIterator = new ObjectIterator(options.fields);
+      selectObject = referencedDocument.makeSelectObject(options.fields);
+      referencedDocument.retrieve(selectObject, function(err, data) {
+        document.set(pair.key, data[0]);
+        options.stack.push(referencedDocument);
+        options.stack.push(nextIterator);
+        self._traverseAllFields(options, callback);
+      });
     },
 
     _storeInContext : function() {
@@ -148,7 +157,7 @@ var Document = classify({
       this._context[this._collectionName][this._id] = this;
     },
 
-    _makeSelectObject : function(fields, stack) {
+    makeSelectObject : function(fields, stack) {
       var self = this;
       var selectObject = {};
       
@@ -156,7 +165,8 @@ var Document = classify({
         stack = [];
       }
       _.each(fields, function(value, key) {
-        if (self.getReference(key)) {
+        if (self._getReferencedModel(key)) {
+          selectObject[key] = 1;
           return;
         }
         stack.push(key);

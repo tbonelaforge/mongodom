@@ -49,6 +49,12 @@ var Retrievable = classify({
   },
 
   instanceMethods : {
+    getData : function() {
+      return JSON.parse(JSON.stringify(this._data));
+    },
+    set : function(key, value) {
+      this._data[key] = value;
+    },
     getCriteria : function() {
       return this._criteria;
     },
